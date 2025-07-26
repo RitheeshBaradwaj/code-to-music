@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Code-to-Music Generator</title>
+  <script defer src="main.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
+  <h1 class="text-3xl font-bold mb-6">Code-to-Music Generator 🎶</h1>
+
+  <form id="uploadForm" class="bg-white shadow-md rounded p-6 w-full max-w-md space-y-4">
+    <input type="file" name="file" accept=".cpp" required class="block w-full text-sm"/>
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Upload & Analyze</button>
+  </form>
+
+  <div id="result" class="mt-8 hidden bg-white p-6 rounded shadow-md w-full max-w-md space-y-4">
+    <h2 class="text-xl font-semibold">Analysis Result</h2>
+    <pre id="metrics" class="bg-gray-100 p-2 rounded text-sm"></pre>
+    <p><strong>Mood:</strong> <span id="mood"></span></p>
+    <audio id="player" controls class="w-full"></audio>
+  </div>
+</body>
+</html>

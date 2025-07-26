@@ -39,3 +39,17 @@
 
 # debug information files
 *.dwo
+
+code_parser/.build
+
+
+#=======================
+# Python
+#=======================
+
+venv
+.venv
+**/__pycache__/**
+.logs
+.DS_Store
+*.zip
