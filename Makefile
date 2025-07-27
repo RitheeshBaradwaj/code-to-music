@@ -21,13 +21,13 @@ all: check fetch setup build run
 
 check:
 	@echo "🧪 Checking for required tools..."
-	@command -v python3.13 >/dev/null 2>&1 || (echo "❌ python3.13 not found"; exit 1)
+	@command -v python3 >/dev/null 2>&1 || (echo "❌ python3 not found"; exit 1)
 	@command -v curl >/dev/null 2>&1 || (echo "❌ curl not found"; exit 1)
 	@command -v unzip >/dev/null 2>&1 || (echo "❌ unzip not found"; exit 1)
 	@command -v cmake >/dev/null 2>&1 || (echo "❌ cmake not found"; exit 1)
 	@command -v clang-tidy >/dev/null 2>&1 || echo "⚠️  clang-tidy not found (optional)"
 	@command -v clang-format >/dev/null 2>&1 || echo "⚠️  clang-format not found (optional)"
-	@command -v fluidsynth >/dev/null 2>&1 || (echo "❌ fluidsynth not found. Please install via: brew install fluid-synth"; exit 1)
+	@command -v fluidsynth >/dev/null 2>&1 || (echo "❌ fluidsynth not found. Please install via: sudo apt-get install fluidsynth"; exit 1)
 
 fetch:
 	@echo "🎧 Checking SoundFont..."
@@ -43,8 +43,7 @@ fetch:
 
 setup:
 	@echo "🐍 Setting up Python environment..."
-	@brew install llvm
-	@python3.13 -m venv $(VENV_DIR)
+	@python3 -m venv $(VENV_DIR)
 	@$(VENV_DIR)/bin/pip install --upgrade pip
 	@$(VENV_DIR)/bin/pip install -r requirements.txt
 	@echo "✅ Python environment ready."
@@ -69,7 +68,7 @@ run_frontend:
 
 test:
 	@echo "📤 Uploading test file..."
-	@curl -X POST ${SERVER_URL} -F "file=@test_samples/example.cpp"
+	@TESTING=true curl -X POST ${SERVER_URL} -F "file=@test_samples/example.cpp"
 
 clean:
 	@echo "🧹 Cleaning project..."

@@ -2,8 +2,12 @@ from fastapi import FastAPI, UploadFile
 import subprocess
 import json
 import os
-from .agent import map_to_mood
-from .music_gen import generate_music
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "venv/lib/python3.12/site-packages")))
+from .agent import get_mood_map_from_metrics
+from .test_agent import get_mood_map_from_metrics as get_mock_mood_map
+from .music_gen import generate_music_from_mood_map
 from loguru import logger
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,8 +52,13 @@ async def analyze_code(file: UploadFile):
 
     logger.debug(f"Results from code parser: {result.stdout}")
     metrics = json.loads(result.stdout)
-    mood = map_to_mood(metrics)
-    output_path = generate_music(mood)
+
+    if os.environ.get("TESTING"):
+        mood_map = get_mock_mood_map(metrics)
+    else:
+        mood_map = get_mood_map_from_metrics(metrics)
+
+    output_path = generate_music_from_mood_map(mood_map)
     logger.info(f"SUCCESS. Check {output_path}")
 
-    return {"metrics": metrics, "mood": mood, "music_path": output_path}
+    return {"metrics": metrics, "mood_map": mood_map, "music_path": output_path}

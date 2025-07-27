@@ -1,45 +1,65 @@
-import subprocess
 import os
-from mingus.containers import Note, Bar, Track
-from mingus.midi import midi_file_out
+import pretty_midi
+import random
+import subprocess
+from mingus.core import scales, chords
+from .scale_info import get_scale_notes
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
-# --- Configuration ---
-MOOD_CONFIG = {
-    "tense": {"meter": (7, 8), "notes": ["C", "D", "Eb", "F"]},
-    "chaotic": {"meter": (5, 4), "notes": ["C", "E", "G#", "B"]},
-    "calm": {"meter": (4, 4), "notes": ["C", "E", "G"]},
-}
-
-DEFAULT_MOOD = "calm"
-MIDI_OUTPUT = os.path.join(PROJECT_ROOT, "output", "result.mid")
-WAV_OUTPUT = os.path.join(PROJECT_ROOT, "output", "result.wav")
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "output")
 SOUNDFONT_PATH = os.path.join(PROJECT_ROOT, "soundfonts", "FluidR3_GM.sf2")
 
-
-# --- Generate MIDI from mood ---
-def generate_music(mood: str) -> str:
-    config = MOOD_CONFIG.get(mood.lower(), MOOD_CONFIG[DEFAULT_MOOD])
-
-    os.makedirs("output", exist_ok=True)
-
-    bar = Bar()
-    bar.set_meter(config["meter"])
-
-    for note in config["notes"]:
-        bar.place_notes(Note(note), 4)
-
-    track = Track()
-    track.add_bar(bar)
-
-    midi_file_out.write_Track(MIDI_OUTPUT, track)
-
-    return convert_midi_to_wav(MIDI_OUTPUT, WAV_OUTPUT)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-# --- Convert MIDI to WAV using FluidSynth ---
+def generate_music_from_mood_map(mood_map: dict) -> str:
+    """
+    Generates a MIDI and WAV file from a musical mood map.
+    """
+    tempo = mood_map.get("tempo", 120)
+    scale_name = mood_map.get("scale", "C major")
+    instruments = mood_map.get("instruments", ["Acoustic Grand Piano"])
+
+    # Get the notes in the scale
+    try:
+        key, scale_type = scale_name.split()
+        notes_in_scale = get_scale_notes(key, scale_type)
+    except ValueError:
+        notes_in_scale = get_scale_notes("C", "major")
+
+    midi = pretty_midi.PrettyMIDI(initial_tempo=tempo)
+
+    for instrument_name in instruments:
+        instrument_program = pretty_midi.instrument_name_to_program(instrument_name)
+        instrument = pretty_midi.Instrument(program=instrument_program)
+
+        # Generate a simple melody
+        current_time = 0.0
+        for _ in range(32):
+            note_name = random.choice(notes_in_scale)
+            note_number = pretty_midi.note_name_to_number(note_name)
+            note = pretty_midi.Note(
+                velocity=random.randint(80, 110),
+                pitch=note_number,
+                start=current_time,
+                end=current_time + 0.5,
+            )
+            instrument.notes.append(note)
+            current_time += 0.5
+
+        midi.instruments.append(instrument)
+
+    midi_path = os.path.join(OUTPUT_DIR, "result.mid")
+    wav_path = os.path.join(OUTPUT_DIR, "result.wav")
+
+    midi.write(midi_path)
+    return convert_midi_to_wav(midi_path, wav_path)
+
+
 def convert_midi_to_wav(midi_path: str, wav_path: str) -> str:
+    """
+    Converts a MIDI file to a WAV file using fluidsynth.
+    """
     if not os.path.exists(SOUNDFONT_PATH):
         raise FileNotFoundError(f"Soundfont not found at: {SOUNDFONT_PATH}")
 
